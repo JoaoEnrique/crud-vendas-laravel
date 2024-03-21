@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\PdfController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/sale/delete/{id}', [SaleController::class, 'delete'])->name('sale.delete'); //delete
     Route::get('/client/{id}', [ClientController::class, 'getById']);
     Route::get('/product/{id}', [ProductController::class, 'getById']);
+    Route::get('/creare-sale-pdf', [PdfController::class, 'createSalePdf']);
 });
 
 require __DIR__.'/auth.php';

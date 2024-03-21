@@ -23,6 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('id_client');
             $table->foreign('id_client')->references('id')->on('customers');
 
+            $table->string('total');
             $table->string('payment_method');
             $table->timestamps();
         });

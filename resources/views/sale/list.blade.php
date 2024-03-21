@@ -18,6 +18,7 @@
 
                     <div class="overflow-y-auto max-h-96">
                         @if(!empty($sales[0]))
+                        <a href="/creare-sale-pdf" class="mr-2 text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded">GERAR PDF</a>
                             <table id="datatables" class="min-w-full">
                                 <thead class="border-b">
                                     <tr>
