@@ -7,6 +7,7 @@
             <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">Vendedor</th>
             <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">Cliente</th>
             <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">Total</th>
+            <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">Total de Parcelas</th>
         </tr>
     </thead>
     <tbody>
@@ -15,6 +16,7 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $sale->seller_name }}</td>
                 <td class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{{ $sale->client_name }}</td>
                 <td class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">R$ {{ $sale->total }}</td>
+                <td class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{{ $sale->total_parcelas }}</td>
             </tr>
 
         @empty
@@ -22,3 +24,9 @@
         @endforelse
     </tbody>
 </table>
+
+<style>
+    *{
+       font-family: sas
+    }
+</style>

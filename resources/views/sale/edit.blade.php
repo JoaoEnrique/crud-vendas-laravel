@@ -16,8 +16,10 @@
                       </div>
                     @endif
 
-                    <form method="POST" action="{{ route('sale.create') }}">
+
+                    <form method="POST" class="form-send-sale" action="{{ route('sale.update') }}">
                         @csrf
+                        <input type="text" class="hidden" value="{{$sale->id}}" name="sale_id" id="sale_id" >
 
                         <h1 class="font-semibold text-xl mb-4 text-gray-800 dark:text-gray-200 leading-tight">
                             {{ __('Cadastrar Cliente') }}
@@ -49,12 +51,16 @@
 
                         <div class="grid md:grid-cols-2 md:gap-6">
                             <div class="relative z-0 w-full group ml-3 mt-4" id="clientData">
-                                <p>Nome: {{$customers[0]->name}}</p>
-                                <p>Email: {{$customers[0]->email}}</p>
-                                <p>CPF / CNPJ: {{$customers[0]['cpf/cnpj']}}</p>
-                                <p>RG: {{$customers[0]->rg}}</p>
-                                <p>Cidade: {{$customers[0]->city}}</p>
-                                <p>Telefone: {{$customers[0]->phone}}</p>
+                                @foreach($customers as $client)
+                                    @if($client->id == $sale->id_client)
+                                        <p>Nome: {{$client->name}}</p>
+                                        <p>Email: {{$client->email}}</p>
+                                        <p>CPF / CNPJ: {{$client['cpf/cnpj']}}</p>
+                                        <p>RG: {{$client->rg}}</p>
+                                        <p>Cidade: {{$client->city}}</p>
+                                        <p>Telefone: {{$client->phone}}</p>
+                                    @endif
+                                @endforeach
                             </div>
                         </div>
                     </div>
@@ -86,9 +92,38 @@
                                     </div>
                                 </div>
                             </div>
-                        
+                            @php
+                                $code = 0;
+                            @endphp
                             <div class="grid grid-cols-1 md:gap-6" id="productList">
-                                <!-- Esta div será preenchida com os dados dos produtos adicionados -->
+                                @foreach($products_selected as $product_selected)
+                                    @php
+                                        $subtotal = $product_selected->price * $product_selected->quantity;
+                                        $code++;
+                                    @endphp
+                                    <div data-code='{{$code}}' id="product-{{$code}}" class="grid grid-cols-5 md:gap-6">
+                                        <div class="relative z-0 w-full group ml-3 mt-4">
+                                            <label class="block font-medium text-sm text-gray-700" for="produto">Produto</label>
+                                            <input class="hidden" type="text" name="id_product[]" value="{{$product_selected->id}}" />
+                                            <input min="1" required class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full" type="text" name="produto[]" value="{{$product_selected->name}}" />
+                                        </div>
+                                        <div class="relative z-0 w-full group ml-3 mt-4">
+                                            <label class="block font-medium text-sm text-gray-700" for="quantity">Quantidade</label>
+                                            <input min="1" data-code="{{$code}}" required class="quantity-{{$code}} calc-subtotal border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full" type="number" name="quantity[]" value='{{$product_selected->quantity}}' />
+                                        </div>
+                                        <div class="relative z-0 w-full group ml-3 mt-4">
+                                            <label class="block font-medium text-sm text-gray-700" for="price">Preço Unitário</label>
+                                            <input min="1" data-code="{{$code}}" required class="price-{{$code}} calc-subtotal border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full" type="number" name="price[]" value="{{$product_selected->price}}" />
+                                        </div>
+                                        <div class="relative z-0 w-full group ml-3 mt-4">
+                                            <label class="block font-medium text-sm text-gray-700" for="subtotal">Subtotal</label>
+                                            <input disabled min="1" onlyread required class="subtotal-{{$code}} border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full" type="number" name="subtotal[]" value='{{$subtotal}}'/>
+                                        </div>
+                                        <div class="relative z-0 w-full group ml-3 mt-4">
+                                            <div data-product="{{$code}}" class="text-center cursor-pointer bg-red-600 button-remove-product rounded-md shadow-sm mt-6 flex justify-center align-super text-white" style="height: 40px; align-items: center;">Remover</div>            
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
                         
@@ -105,14 +140,31 @@
 
                         <div class="relative z-0 w-full group ml-3 mt-4">
                             <h1 class="font-semibold text-xl mb-4 text-gray-800 dark:text-gray-200 leading-tight">
-                                <span class="total"></span>                            
-                                <input class="input-total hidden" type="text" id="total" name="total"/>
-
+                                <span class="total">Total: R$ {{$sale->total}}</span>                     
+                                <input class="input-total hidden" type="text" id="total" name="total" value="{{$sale->total}}"/>
                             </h1>
                         </div>
 
-                        <div class="grid md:grid-cols-3 md:gap-6 " id="installmentList">
-                            <!-- Esta div será preenchida com os dados das parcelas adicionadas -->
+                        @php
+                            $codeInstallment = 0;
+                        @endphp
+                        <div class="grid md:grid-cols-1 md:gap-6 " id="installmentList">
+                            @foreach($installments as $installment)
+                                <div data-code='installment-{{$codeInstallment}}' id="installment-{{$codeInstallment}}"  class="grid grid-cols-3 md:gap-6">
+                                    <div class="installment-{{$codeInstallment}} relative z-0 w-full group ml-3 mt-4">
+                                        <label class="block font-medium text-sm text-gray-700">Valor</label>
+                                        <input required id="value" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full" type="number" value="{{$installment->value}}" name="value[]" />
+                                    </div>
+                    
+                                    <div class="installment-{{$codeInstallment}} relative z-0 w-full group ml-3 mt-4">
+                                        <label class="block font-medium text-sm text-gray-700">Data de Vencimento</label>
+                                        <input required type="date" id="invoice_date" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full"  value="{{$installment->invoice_date}}" name="invoice_date[]" />
+                                    </div>
+                                    <div class="installment-{{$codeInstallment}} relative z-0 w-full group ml-3 mt-4">
+                                        <div required data-installment="{{$codeInstallment}}" class="text-center cursor-pointer bg-red-600 button-remove-installment rounded-md shadow-sm mt-6 flex justify-center align-super text-white" style="height: 40px; align-items: center;">Remover</div>            
+                                    </div>
+                                </div>
+                                @endforeach
                         </div>
                         
                         <div class="relative z-0 button-add-installment w-full group ml-3 mt-4">
@@ -121,9 +173,14 @@
                             </x-secondary-button>
                         </div>
                         
+
+                        <div id="errors" class="mt-3">
+    
+                        </div>
+
                         <div class="block mt-1 w-full mt-4 button-submit-sales">
-                            <x-primary-button disabled class="mt-4 button-send-sale">
-                                {{ __('Cadastrar') }}
+                            <x-primary-button class="mt-4 button-send-sale">
+                                {{ __('Editar') }}
                             </x-primary-button>
                         </div>
                         

@@ -41,11 +41,6 @@
                                         @endif
 
                                         <td class="text-sm text-gray-900 font-light px-7 py-4 whitespace-nowrap" style="min-width: 180px">
-
-
-                                            <x-danger-button x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-deletion{{$product->id}}')">
-                                                {{ __('Apagar') }}
-                                            </x-danger-button>
                                             <form method="post" action="{{ route('product.delete', $product->id) }}" class="p-6">
                                                 <a href="/product/update/{{$product->id}}" class="mr-2 text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded">
                                                     {{ __('Editar') }}
@@ -59,8 +54,6 @@
                                                     </x-danger-button>
                                                 </div>
                                             </form>
-
-                                            
                                         </td>
                                     </tr>
                                     @endforeach

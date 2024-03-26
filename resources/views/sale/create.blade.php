@@ -10,13 +10,13 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     @if (!empty(session('danger')))   
-                    <div class="bg-red-100 border mb-4 border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                        <strong class="font-bold">Erro no cadastro!</strong>
-                        <span class="block sm:inline">{{session('danger')}}
+                        <div class="bg-red-100 border mb-4 border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                            <strong class="font-bold">Erro no cadastro!</strong>
+                            <span class="block sm:inline">{{session('danger')}}</span>
                       </div>
                     @endif
 
-                    <form method="POST" action="{{ route('sale.create') }}">
+                    <form method="POST" class="form-send-sale" action="{{ route('sale.create') }}">
                         @csrf
 
                         <h1 class="font-semibold text-xl mb-4 text-gray-800 dark:text-gray-200 leading-tight">
@@ -111,7 +111,7 @@
                             </h1>
                         </div>
 
-                        <div class="grid md:grid-cols-3 md:gap-6 " id="installmentList">
+                        <div class="grid grid-cols-1 md:gap-6 " id="installmentList">
                             <!-- Esta div será preenchida com os dados das parcelas adicionadas -->
                         </div>
                         
@@ -120,9 +120,13 @@
                                 {{ __('Adicionar') }}
                             </x-secondary-button>
                         </div>
+
+                        <div id="errors" class="mt-3">
+    
+                        </div>
                         
                         <div class="block mt-1 w-full mt-4 button-submit-sales">
-                            <x-primary-button disabled class="mt-4 button-send-sale">
+                            <x-primary-button class="mt-4 button-send-sale">
                                 {{ __('Cadastrar') }}
                             </x-primary-button>
                         </div>

@@ -18,13 +18,19 @@
 
                     <div class="overflow-y-auto max-h-96">
                         @if(!empty($sales[0]))
-                        <a href="/creare-sale-pdf" class="mr-2 text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded">GERAR PDF</a>
+                        <div class="grid md:grid-cols-2 md:gap-6 mb-5">
+                            <div class="relative z-0 w-full group ml-3 mt-4">
+                            <a href="/creare-sale-pdf" class="mr-2 text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded">GERAR PDF</a>
+                            </div>
+                        </div>
+
                             <table id="datatables" class="min-w-full">
                                 <thead class="border-b">
                                     <tr>
                                         <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">Vendedor</th>
                                         <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">Cliente</th>
                                         <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">Total</th>
+                                        <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">Total de Parcelas</th>
                                         <th scope="col" class="text-sm font-medium text-gray-900 px-6 py-4 text-left">Ação</th>
                                     </tr>
                                 </thead>
@@ -34,40 +40,22 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $sale->seller_name }}</td>
                                         <td class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">{{ $sale->client_name }}</td>
                                         <td class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">R$ {{ $sale->total }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $sale->total_parcelas }}</td>
                                         <td class="text-sm text-gray-900 font-light px-7 py-4 whitespace-nowrap" style="min-width: 180px">
 
-                                            <a href="/sale/update/{{$sale->id}}" class="mr-2 text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded">
-                                                {{ __('Editar') }}
-                                            </a>
+                                            <form method="post" action="{{ route('sale.delete', $sale->id) }}" class="p-6">
+                                                <a href="/sale/update/{{$sale->id}}" class="mr-2 text-white bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded">
+                                                    {{ __('Editar') }}
+                                                </a>
 
-                                            <x-danger-button x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion{{$sale->id}}')">
-                                                {{ __('Apagar') }}
-                                            </x-danger-button>
+                                                @csrf
+                                                @method('delete')
 
-                                            <x-modal name="confirm-user-deletion{{$sale->id}}" :show="$errors->userDeletion->isNotEmpty()" focusable>
-                                                <form method="post" action="{{ route('sale.delete', $sale->id) }}" class="p-6">
-                                                    @csrf
-                                                    @method('delete')
-
-                                                    <h2 class="text-lg font-medium text-gray-900">
-                                                        {{ __('Tem certeza que deseja apagar este salee?') }}
-                                                    </h2>
-
-                                                    <p class="mt-1 text-sm text-gray-600">
-                                                        {{ __('id da venda: ' . $sale->name) }}
-                                                    </p>
-
-                                                    <div class="mt-6 flex justify-end">
-                                                        <x-secondary-button class="mr-2 " x-on:click="$dispatch('close')">
-                                                            {{ __('Cancelar') }}
-                                                        </x-secondary-button>
-
-                                                        <x-danger-button class="ms-3">
-                                                            {{ __('Apagar') }}
-                                                        </x-danger-button>
-                                                    </div>
-                                                </form>
-                                            </x-modal>
+                                                    <x-danger-button class="ms-3">
+                                                        {{ __('Apagar') }}
+                                                    </x-danger-button>
+                                                </div>
+                                            </form>
                                         </td>
                                     </tr>
                                     @endforeach

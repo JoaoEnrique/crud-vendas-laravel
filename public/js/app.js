@@ -5,44 +5,28 @@ $(document).ready(function(){
     $(document).on('click', '.button-add-installment', add_installment) // adicionar produto
     $(document).on('click', '.button-remove-installment', remove_installment) // remover produto
     $(document).on('input', '.calc-subtotal', calc_subtotal) // calcular subtotal dos pedidos
-    $(document).on('input', '.value', active_button_sale) // ativar btn vendas
-    $(document).on('input', '.invoice_date', active_button_sale) // ativar btn vendas
     // $(document).on('submit', '.form-send-sale', send_sale) // ativar btn vendas
 
-    $('form').submit(function(event) {
+    errorrProduct = 0
+    errorInstallment = 0
+    $('.form-send-sale').submit(function(event) {
         event.preventDefault();
+        $('#errors').empty();
     
-        var produtos = [];
-        $('#productList > div').each(function() {
-            var idProduto = $(this).find('input[name="id_product[]"]').val();
-            var nomeProduto = $(this).find('input[name="produto[]"]').val();
-            var quantidade = $(this).find('input[name="quantity[]"]').val();
-            var precoUnitario = $(this).find('input[name="price[]"]').val();
-    
-            produtos.push({
-                id_product: idProduto,
-                produto: nomeProduto,
-                quantity: quantidade,
-                price: precoUnitario,
-            });
-        });
+        var products = extractProducts();
+        var installments = extractInstallments();
+        var errors = validateForm(products, installments);
 
-        var installments = [];
-        $('#installmentList').each(function() {
-            var invoice_date = $(this).find('input[name="invoice_date[]"]').val();
-            var value = $(this).find('input[name="value[]"]').val();
-    
-            installments.push({
-                invoice_date: invoice_date,
-                value: value,
-            });
-        });
-    
+        if (errors.length > 0) {
+            displayErrors(errors);
+            return false; // Impede o envio do formulário se a validação falhar
+        }
+
         // adiciona os dados dos produtos como um campo 'produtos' no formulário
         $('<input>').attr({
             type: 'hidden',
             name: 'produtos',
-            value: JSON.stringify(produtos)
+            value: JSON.stringify(products)
         }).appendTo('form');
     
         // adiciona os dados dos produtos como um campo 'installments' no formulário
@@ -55,7 +39,108 @@ $(document).ready(function(){
         this.submit();
     });
 
+    function extractProducts() {
+        var products = [];
     
+        $('#productList > div').each(function() {
+            var idProduto = $(this).find('input[name="id_product[]"]').val();
+            var nomeProduto = $(this).find('input[name="produto[]"]').val();
+            var quantidade = $(this).find('input[name="quantity[]"]').val();
+            var precoUnitario = $(this).find('input[name="price[]"]').val();
+            var subtotal = $(this).find('input[name="subtotal[]"]').val();
+    
+            products.push({
+                id_product: idProduto,
+                produto: nomeProduto,
+                quantity: quantidade,
+                price: precoUnitario,
+                subtotal: subtotal,
+            });
+        });
+    
+        return products;
+    }
+    
+    function extractInstallments() {
+        var installments = [];
+    
+        $('#installmentList > div').each(function() {
+            var invoice_date = $(this).find('input[name="invoice_date[]"]').val();
+            var value = $(this).find('input[name="value[]"]').val();
+    
+            installments.push({
+                invoice_date: invoice_date,
+                value: value,
+            });
+        });
+    
+        return installments;
+    }
+
+    function validateForm(products, installments) {
+        var errors = [];
+    
+        if (products.length === 0) {
+            errors.push('Adicione pelo menos um produto.');
+        }
+
+        products.forEach(product => {
+            if(!product.produto || !product.quantity || !product.price)
+                errors.push('Preencha todos os campos do produto');
+        })
+
+        installments.forEach(installment => {
+            if(!installment.invoice_date || !installment.value)
+                errors.push('Preencha todos os campos da parcela');
+        })
+    
+        if (installments.length === 0) {
+            errors.push('Adicione pelo menos uma parcela.');
+        }
+    
+        var totalPrice = calc_total_price(products);
+        var totalValue = calc_total_value(installments);
+
+        console.log(totalPrice);
+        console.log(totalValue);
+
+        if (totalPrice > totalValue) {
+            errors.push('O preço dos produtos ultrapassa o valor das parcelas.');
+        } else if (totalPrice < totalValue) {
+            errors.push('O valor das parcelas ultrapassa o preço dos produtos.');
+        }
+    
+        return errors;
+    }
+
+    function displayErrors(errors) {
+        var $errorsContainer = $('#errors');
+    
+        errors.forEach(function(error) {
+            $errorsContainer.append(`
+                <div class="error bg-red-100 border mb-4 border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <strong class="font-bold">Erro no cadastro!</strong>
+                    <span class="block sm:inline text-error">${error}</span>
+                </div>
+            `);
+        });
+    }
+    
+    function calc_total_price(products) {
+        var totalPrice = 0;
+        products.forEach(function(product) {
+            totalPrice += parseFloat(product.subtotal);
+        });
+        return totalPrice;
+    }
+    
+    function calc_total_value(installments) {
+        var totalValue = 0;
+        installments.forEach(function(installment) {
+            totalValue += parseFloat(installment.value);
+        });
+        return totalValue;
+    }
 
     data_tables() //datatables dos clientes prodtutos e vendas
 
@@ -81,24 +166,24 @@ $(document).ready(function(){
             }
         });
     }
-
     
-    var i = 0;
-    var code = 0;
     function add_product(){
         var idProduct = $('#id_product').val();
         var productName = $('#id_product option:selected').text();
+        code = 0;
+
+        $('#productList > div').each(function() {
+            code = $(this).data('code');
+        });
 
         $.ajax({
             url: '/product/' + idProduct,
             type: 'GET',
             success: function(response){
-                i++;
                 code++;
-                
 
                 $('#productList').append(`
-                    <div id="product-${i}" class="grid grid-cols-5 md:gap-6">
+                    <div data-code='${code}' id="product-${code}" class="grid grid-cols-5 md:gap-6">
                         <div class="relative z-0 w-full group ml-3 mt-4">
                             <label class="block font-medium text-sm text-gray-700" for="produto">Produto</label>
                             <input class="hidden" type="text" name="id_product[]" value="${idProduct}" />
@@ -117,14 +202,13 @@ $(document).ready(function(){
                             <input disabled min="1" onlyread required class="subtotal-${code} border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full" type="number" name="subtotal[]" value='${response.price}'/>
                         </div>
                         <div class="relative z-0 w-full group ml-3 mt-4">
-                            <div data-product="${i}" class="button-remove-product border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full" style="background: red; margin-top: 35px; cursor: pointer; color: #fff; text-align: center">Remover</div>            
+                            <div data-product="${code}" class="text-center cursor-pointer bg-red-600 button-remove-product rounded-md shadow-sm mt-6 flex justify-center align-super text-white" style="height: 40px; align-items: center;">Remover</div>            
                         </div>
                     </div>
                 `);
 
                 calc_installment()
                 calc_total()
-                active_button_sale()
             },
             error: function(error){
                 console.log(error.responseText);
@@ -137,8 +221,6 @@ $(document).ready(function(){
         product.remove()
 
         calc_installment()
-        active_button_sale()
-
     }
 
     function calc_subtotal(){
@@ -148,6 +230,7 @@ $(document).ready(function(){
         subtotal = price * quantity;
 
         $(`.subtotal-${code}`).val(subtotal)
+        calc_installment()
         calc_total()
     }
 
@@ -155,8 +238,6 @@ $(document).ready(function(){
         total = 0;
 
         $('input[name="subtotal[]"]').each(function() {
-            console.log($(this).val());
-
             var value = $(this).val();
             total += parseFloat(value);
         });
@@ -170,27 +251,31 @@ $(document).ready(function(){
         $('#datatables').DataTable();
     }
 
-    codeInstallment = 0;
     function add_installment(){
-        codeInstallment++;
+        codeInstallment = 0;
+
+        $('#installmentList > div').each(function() {
+            codeInstallment = $(this).data('codeInstallment');
+        });
 
         $('#installmentList').append(`
-            <div class="installment-${codeInstallment} relative z-0 w-full group ml-3 mt-4">
-                <label class="block font-medium text-sm text-gray-700">Valor</label>
-                <input required id="value" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full" type="number" name="value[]" />
-            </div>
+            <div data-code='${codeInstallment}' id="installment-${codeInstallment}"  class="grid grid-cols-3 md:gap-6">
+                <div class="installment-${codeInstallment} relative z-0 w-full group ml-3 mt-4">
+                    <label class="block font-medium text-sm text-gray-700">Valor</label>
+                    <input required id="value" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full" type="number" name="value[]" />
+                </div>
 
-            <div class="installment-${codeInstallment} relative z-0 w-full group ml-3 mt-4">
-                <label class="block font-medium text-sm text-gray-700">Data de Vencimento</label>
-                <input required type="date" id="invoice_date" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full" name="invoice_date[]" />
-            </div>
-            <div class="installment-${codeInstallment} relative z-0 w-full group ml-3 mt-4">
-                <div required data-installment="${codeInstallment}" class="button-remove-installment border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full" style="background: red; margin-top: 35px; cursor: pointer; color: #fff; text-align: center">Remover</div>            
+                <div class="installment-${codeInstallment} relative z-0 w-full group ml-3 mt-4">
+                    <label class="block font-medium text-sm text-gray-700">Data de Vencimento</label>
+                    <input required type="date" id="invoice_date" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full" name="invoice_date[]" />
+                </div>
+                <div class="installment-${codeInstallment} relative z-0 w-full group ml-3 mt-4">
+                    <div required data-installment="${codeInstallment}" class="text-center cursor-pointer bg-red-600 button-remove-installment rounded-md shadow-sm mt-6 flex justify-center align-super text-white" style="height: 40px; align-items: center;">Remover</div>            
+                </div>
             </div>
         `);
 
         calc_installment()
-        active_button_sale()
     }
 
     function calc_installment(){
@@ -199,26 +284,11 @@ $(document).ready(function(){
         $('input[name="value[]"]').val(valor);
     }
 
-    function calc_installment_client(){
-        console.log($(this).data());
-    }
-
     function remove_installment(){
-        codeInstallment = $(this).data('installment');
-        $(`.installment-${codeInstallment}`).remove()
-        calc_installment()
-        active_button_sale()
-        
-    }
+        installment = $(`#installment-${$(this).data('installment')}`)
+        installment.remove()
 
-    function active_button_sale(){
-        var invoice_date = $('input[name="invoice_date[]"]').val();
-        console.log(invoice_date);
-        
-        $('input[name="value[]"]').each(function(index, element) {
-            var value = $(this).val();
-            $('.button-send-sale').prop('disabled', false);
-        });
+        calc_installment()
     }
 
   });
